@@ -1,0 +1,91 @@
+# serverless.yml
+service: nwassik-store
+
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: eu-west-3
+  stage: NotToUseStage
+  environment:
+    STAGE: ${sls:stage}
+    DYNAMODB_TABLE: ${self:service}-dynamodb-${sls:stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:* # FIXME: too permissive
+          Resource:
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:service}-dynamodb-${sls:stage}"
+functions:
+  # -----------------------------------------------------------------------------
+  # HEALTH CHECK
+  # -----------------------------------------------------------------------------
+  healthCheck:
+    handler: src/handlers/health/check.health_check
+    events:
+      - http:
+          path: /health
+          method: get
+
+  # -----------------------------------------------------------------------------
+  # REQUESTS
+  # -----------------------------------------------------------------------------
+  listRequests:
+    handler: src/handlers/requests/list.list_requests
+    events:
+      - http:
+          path: /requests
+          method: get
+          cors: true
+  createRequest:
+    handler: src/handlers/requests/create.create_request
+    events:
+      - http:
+          path: /requests
+          method: post
+          cors: true
+  getRequest:
+    handler: src/handlers/requests/get.get_request
+    events:
+      - http:
+          path: /requests/{request_id}
+          method: get
+          cors: true
+  deleteRequest:
+    handler: src/handlers/requests/delete.delete_request
+    events:
+      - http:
+          path: /requests/{request_id}
+          method: delete
+          cors: true
+  listMyRequests:
+    handler: src/handlers/requests/mine.list_my_requests
+    events:
+      - http:
+          path: /requests/mine
+          method: get
+          cors: true
+
+# -----------------------------------------------------------------------------
+# RESOURCES
+# -----------------------------------------------------------------------------
+resources:
+  Resources:
+    RequestsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-dynamodb-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST

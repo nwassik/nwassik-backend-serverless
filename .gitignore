@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env/
+*.egg-info/
+dist/
+build/
+
+# Serverless
+.serverless/
+.node_modules/
+node_modules/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
