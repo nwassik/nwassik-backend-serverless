@@ -13,13 +13,30 @@ package:
     - "README.md"
     - "requirements.txt"
     - "serverless.yaml"
+    - "!venv/**" # ← Explicitly exclude venv
+    - "!node_modules/**" # ← Explicitly exclude node_modules
+    - "!__pycache__/**" # ← Explicitly exclude pycache
 
 custom:
   pythonRequirements:
     usePoetry: false
     dockerizePip: true # <<--- build wheels in Docker (required for compiled deps as I am on MacOS)
-    dockerFile: Dockerfile
-    dockerBuildCmd: pip install -r requirements.txt -t /var/task --platform manylinux2014_x86_64
+    useStaticCache: false # ← Disable cache
+    useDownloadCache: false # ← Disable download cache
+
+    # dockerFile: Dockerfile
+    # dockerBuildCmd: pip install -r requirements.txt -t /var/task --platform manylinux2014_x86_64 --no-cache-dir
+    dockerBuildCmd: |
+      pip install \
+        --platform manylinux2014_x86_64 \
+        --target /var/task \
+        --implementation cp \
+        --python-version 3.11 \
+        --only-binary=:all: \
+        --upgrade \
+        -r requirements.txt
+
+  dynamodbTableName: ${self:service}-dynamodb-${sls:stage}
 
 provider:
   name: aws
@@ -28,7 +45,10 @@ provider:
   stage: NotToUseStage
   environment:
     STAGE: ${sls:stage}
-    DYNAMODB_TABLE: ${self:service}-dynamodb-${sls:stage}
+    DYNAMODB_TABLE: ${self:custom.dynamodbTableName}
+  # TODO: Upgrade all http with httpApi for single place CORS with API Gateway V2
+  # httpApi:
+  #   cors: true # ← Central CORS for ALL endpoints
   iam:
     role:
       statements:
@@ -36,7 +56,7 @@ provider:
           Action:
             - dynamodb:* # FIXME: too permissive
           Resource:
-            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${env:DYNAMODB_TABLE}"
+            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.dynamodbTableName}"
 functions:
   # -----------------------------------------------------------------------------
   # HEALTH CHECK
@@ -51,6 +71,7 @@ functions:
   # -----------------------------------------------------------------------------
   # REQUESTS
   # -----------------------------------------------------------------------------
+  # TODO: CORS is enabled from everywhere, please be explicit or remove it
   listRequests:
     handler: src/handlers/requests/list.list_requests
     events:
@@ -95,7 +116,7 @@ resources:
     RequestsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${env:DYNAMODB_TABLE}
+        TableName: ${self:custom.dynamodbTableName}
         AttributeDefinitions:
           - AttributeName: pk
             AttributeType: S

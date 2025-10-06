@@ -6,8 +6,6 @@ from decimal import Decimal
 import sys
 import os
 
-sys.path.insert(0, "/var/task/package")
-
 from src.lib.responses import success, error
 from src.schemas.request import RequestCreate
 from src.enums import RequestType
@@ -27,9 +25,9 @@ def create_request(event, context):
                 return error("Pickup location is required for 'pickup_and_delivery' requests", 400)
         
 
-        # Business logic (everything in handler)
-        # Get user from Cognito (mock for now)
-        # Business logic (everything in handler)
+        # TODO: Business logic currently is in handler, need to move it and isolate outside for reuse
+        # TODO: Get user from Cognito (mock for now)
+
         user_id = "mock-user-id"
         request_id = str(uuid.uuid4())
         

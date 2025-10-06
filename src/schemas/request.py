@@ -2,8 +2,6 @@ from datetime import date, datetime
 from typing import Optional, Self
 import sys
 
-sys.path.insert(0, "/var/task/package")
-
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from src.enums import RequestType
 
