@@ -22,10 +22,8 @@ custom:
     usePoetry: false
     dockerizePip: true # <<--- build wheels in Docker (required for compiled deps as I am on MacOS)
     useStaticCache: false # ← Disable cache
-    useDownloadCache: false # ← Disable download cache
+    # useDownloadCache: false # ← Disable download cache
 
-    # dockerFile: Dockerfile
-    # dockerBuildCmd: pip install -r requirements.txt -t /var/task --platform manylinux2014_x86_64 --no-cache-dir
     dockerBuildCmd: |
       pip install \
         --platform manylinux2014_x86_64 \
