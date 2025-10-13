@@ -44,10 +44,10 @@ class RequestCreate(BaseModel):
     # Conditional / cross-field validation
     # -------------------------------
     @model_validator(mode="after")
-    def check_pickup_location(cls, values):
-        r_type = values.request_type
-        pickup_lat = values.pickup_latitude
-        pickup_lon = values.pickup_longitude
+    def check_pickup_location(self):
+        r_type = self.request_type
+        pickup_lat = self.pickup_latitude
+        pickup_lon = self.pickup_longitude
 
         if r_type == RequestType.pickup_and_delivery:
             if pickup_lat is None or pickup_lon is None:
@@ -59,7 +59,7 @@ class RequestCreate(BaseModel):
                 raise ValueError(
                     "pickup_latitude and pickup_longitude must be None for delivery_only requests"
                 )
-        return values
+        return self
 
 
 class RequestOut(BaseModel):

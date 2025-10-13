@@ -150,7 +150,7 @@ resources:
             AttributeType: N
           - AttributeName: user_id
             AttributeType: S
-          - AttributeName: creation_date
+          - AttributeName: created_at
             AttributeType: S
         KeySchema:
           - AttributeName: request_id
@@ -175,7 +175,7 @@ resources:
             KeySchema:
               - AttributeName: user_id
                 KeyType: HASH
-              - AttributeName: creation_date
+              - AttributeName: created_at
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL # TODO: Probably Should change that to INCLUDE with only necessary fields
