@@ -4,9 +4,11 @@ from typing import Optional, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from enum import Enum
 
+
 class RequestType(str, Enum):
     delivery_only = "delivery_only"
     pickup_and_delivery = "pickup_and_delivery"
+
 
 class LocationFilter(BaseModel):
     lat: Optional[float] = Field(None, ge=-90, le=90)
@@ -18,11 +20,17 @@ class LocationFilter(BaseModel):
         lat, lng, radius = values.lat, values.lng, values.radius_km
         filled = [lat is not None, lng is not None, radius is not None]
         if any(filled) and not all(filled):
-            raise ValueError("All of lat, lng, and radius_km must be provided together.")
+            raise ValueError(
+                "All of lat, lng, and radius_km must be provided together."
+            )
         return values
 
+
 class RequestCreate(BaseModel):
-    due_date_ts: int = Field(ge=int(datetime.now(timezone.utc).timestamp()), le=int(datetime(2027, 1, 1).timestamp()))
+    due_date_ts: int = Field(
+        ge=int(datetime.now(timezone.utc).timestamp()),
+        le=int(datetime(2027, 1, 1).timestamp()),
+    )
     request_type: RequestType
 
     title: str = Field(..., max_length=255)
@@ -35,7 +43,7 @@ class RequestCreate(BaseModel):
     # -------------------------------
     # Conditional / cross-field validation
     # -------------------------------
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def check_pickup_location(cls, values):
         r_type = values.request_type
         pickup_lat = values.pickup_latitude
@@ -52,7 +60,7 @@ class RequestCreate(BaseModel):
                     "pickup_latitude and pickup_longitude must be None for delivery_only requests"
                 )
         return values
-    
+
 
 class RequestOut(BaseModel):
     id: int
@@ -88,10 +96,12 @@ class RequestUpdate(BaseModel):
         Ensure at least one of title or description is provided.
         """
         title, description = values.title, values.description
-        
+
         if title is None and description is None:
-            raise ValueError("At least one of 'title' or 'description' must be provided.")
-        
+            raise ValueError(
+                "At least one of 'title' or 'description' must be provided."
+            )
+
         if values.title is not None and not values.title.strip():
             raise ValueError("Title cannot be empty or whitespace.")
 
