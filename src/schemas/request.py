@@ -28,7 +28,7 @@ class LocationFilter(BaseModel):
 
 
 class RequestCreate(BaseModel):
-    due_date: datetime
+    due_date: Optional[datetime] = Field(None)
     request_type: RequestType
 
     title: str = Field(..., max_length=100)  # TODO: decide adequate length
@@ -48,12 +48,12 @@ class RequestCreate(BaseModel):
     def validate_due_date(self):
         now_utc = datetime.now(timezone.utc)
 
-        if self.due_date.tzinfo is None:
-            raise ValueError("due_date must be timezone-aware (UTC)")
-
-        # Ensure due_date is in the future
-        if self.due_date <= now_utc:
-            raise ValueError("due_date must be in the future (UTC)")
+        # Ensure due_date is timezone-aware and in the future
+        if self.due_date is not None:
+            if self.due_date.tzinfo is None:
+                raise ValueError("due_date must be timezone-aware (UTC)")
+            if self.due_date <= now_utc:
+                raise ValueError("due_date must be in the future (UTC)")
 
         return self
 

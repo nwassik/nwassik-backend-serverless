@@ -18,7 +18,7 @@ class Request(Base):
     __tablename__ = "requests"
 
     # default value is Python side generated and not DB Side
-    id = Column(GUID(), primary_key=True, default=uuid.uui4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     user_id = Column(GUID(), nullable=False)
 
     request_type = Column(Enum(RequestType), nullable=False)
