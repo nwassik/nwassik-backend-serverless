@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
-from uuid import UUID
 
-from src.schemas.request import RequestCreate
+
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+from uuid import UUID
 from src.models.request import Request
+from src.schemas.request import RequestCreate
 
 
 # FIXME: For every method should return whether Request or Union of sub types
@@ -19,8 +21,19 @@ class RequestRepositoryInterface(ABC):
         pass
 
     # TODO: @abstractmethod
-    def get_batch(self, limit: int = 20, offset: int = 0) -> List[Request]:
+    def get_batch_from_last_item(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[Request]:
         """Get a batch of requests with pagination"""
+        pass
+
+    # TODO: @abstractmethod
+    def get_batch_from_due_date(
+        self, start_due_date: datetime, limit: int = 20
+    ) -> List[Request]:
+        """Get a batch of requests starting from specific due date"""
         pass
 
     # TODO: @abstractmethod
@@ -28,7 +41,7 @@ class RequestRepositoryInterface(ABC):
         """Update request fields"""
         pass
 
-    # TODO: @abstractmethod
+    @abstractmethod
     def delete(self, request_id: UUID) -> bool:
         """Delete a request by ID"""
         pass

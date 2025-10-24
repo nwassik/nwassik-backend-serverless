@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from src.repositories.interfaces import RequestRepositoryInterface
 from src.db.session import get_db_session
 from src.schemas.request import RequestType
@@ -10,14 +8,27 @@ from src.models.request import (
     OnlineServiceRequest,
 )
 
-if TYPE_CHECKING:
-    from typing import Optional, List
-    from src.schemas.request import RequestCreate
-    from uuid import UUID
+from typing import Optional, List
+from src.schemas.request import RequestCreate
+from uuid import UUID
+
+_request_repo_instance = None
+
+
+# NOTE: for now I keep this as a singleton, though it does not mean that
+# DB sessions are the same across same AWS lambda calls. Actually, get_db_session,
+# for now creates a new session for every call, so we are safe. I am keeping this
+# in case I move out from Lambda to something like FlaskAPI/FastAPI, where I can
+# reuse long running sessions. AWS Lambda are short lived/running environments.
+def get_request_repository() -> "RequestRepository":
+    global _request_repo_instance
+    if _request_repo_instance is None:
+        _request_repo_instance = RequestRepository()
+    return _request_repo_instance
 
 
 class RequestRepository(RequestRepositoryInterface):
-    def create(user_id: "UUID", input_request: "RequestCreate"):
+    def create(self, user_id: "UUID", input_request: "RequestCreate") -> Request:
         with get_db_session() as db:
             request = Request(
                 user_id=user_id,
@@ -64,14 +75,11 @@ class RequestRepository(RequestRepositoryInterface):
             db.add(request)
             return request
 
-    # -------------------------------
-    # Read
-    # -------------------------------
     def get_by_id(self, request_id: UUID) -> Optional[Request]:
         with get_db_session() as db:
             return db.query(Request).filter(Request.id == request_id).first()
 
-    def get_batch(
+    def get_batch_from_last_item(
         self,
         limit: int = 20,
         last_id: Optional[UUID] = None,
@@ -122,28 +130,19 @@ class RequestRepository(RequestRepositoryInterface):
                 .all()
             )
 
-    # -------------------------------
-    # Update
-    # -------------------------------
-    def update(request_id, data: dict):
+    def update(self, request_id, data: dict) -> Request:
         with get_db_session() as db:
             req = db.query(Request).filter(Request.id == request_id).first()
             if not req:
-                return None
+                raise Exception("Workflow should not be happening")
             for k, v in data.items():
                 setattr(req, k, v)
-            db.commit()
-            db.refresh(req)
             return req
 
-    # -------------------------------
-    # Delete
-    # -------------------------------
-    def delete(request_id):
+    def delete(self, request_id) -> bool:
         with get_db_session() as db:
             req = db.query(Request).filter(Request.id == request_id).first()
             if not req:
                 return True
             db.delete(req)
-            db.commit()
             return True
