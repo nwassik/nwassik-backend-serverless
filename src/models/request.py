@@ -16,6 +16,7 @@ from src.schemas.request import RequestType
 from .types import GUID
 
 
+# TODO: Add fragile field, item size and weight
 class Request(Base):
     __tablename__ = "requests"
 
