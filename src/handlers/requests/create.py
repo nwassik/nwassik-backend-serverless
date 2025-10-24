@@ -1,7 +1,7 @@
 import json
 from src.lib.responses import success, error
 from src.schemas.request import RequestCreate
-import src.db.requests_crud as requests_repo
+import src.db.requests_crud as request_repo
 
 
 def create_request(event, _):
@@ -20,7 +20,7 @@ def create_request(event, _):
         # FIXME: Need to limit number of requests created by user for spam.
         # Maximum 20 requests should be allowed at the same time
         # He needs to delete some of the old one if he has already capped out
-        request = requests_repo.create(user_id=user_id, request=request)
+        request = request_repo.create(user_id=user_id, request=request)
 
         return success(
             {
