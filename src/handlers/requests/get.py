@@ -1,11 +1,12 @@
 from src.lib.responses import success, error
 from src.repositories.request_repository import get_request_repository
+from uuid import UUID
 
 
 def get_request(event, _):
     request_repo = get_request_repository()
     try:
-        request_id = event.get("pathParameters", {}).get("request_id")
+        request_id = UUID(event.get("pathParameters", {}).get("request_id"))
         request = request_repo.get_by_id(request_id=request_id)
 
         if not request:

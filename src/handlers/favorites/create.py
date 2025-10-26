@@ -15,14 +15,7 @@ def create_favorite(event, _):
 
         body = json.loads(event.get("body", "{}"))
 
-        request_id_str = body.get("request_id")
-        if not request_id_str:
-            return error("Missing 'request_id' in body", 400)
-        # Validate UUID format
-        try:
-            request_id = UUID(request_id_str)
-        except (ValueError, TypeError):
-            return error("Invalid 'request_id' format. Must be a valid UUID.", 400)
+        request_id = UUID(body.get("request_id"))
 
         # Add favorite (repository handles idempotance)
         favorite = favorite_repo.create(user_id=user_id, request_id=request_id)

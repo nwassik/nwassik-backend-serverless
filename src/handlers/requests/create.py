@@ -3,11 +3,15 @@ from src.lib.responses import success, error
 from src.schemas.request import RequestCreate
 from src.repositories.request_repository import get_request_repository
 from uuid import UUID
+from config import MAX_USER_CREATED_REQUESTS
 
 
 def create_request(event, _):
     request_repo = get_request_repository()
     try:
+        claims = event.get("requestContext").get("authorizer").get("claims")
+        user_id = UUID(claims.get("sub"))
+
         body = json.loads(event.get("body", "{}"))
 
         # NOTE: Validation could have been outside of Lambda and at API Gateway level,
@@ -16,11 +20,12 @@ def create_request(event, _):
         # Only static stuff is supported for now in API Gateway
         input_request: RequestCreate = RequestCreate.model_validate(body)
 
-        claims = event.get("requestContext").get("authorizer").get("claims")
-        user_id = claims.get("sub")
-        # FIXME: Need to limit number of requests created by user for spam.
-        # Maximum 20 requests should be allowed at the same time
-        # He needs to delete some of the old one if he has already capped out
+        if (
+            len(request_repo.get_user_requests(user_id=user_id))
+            >= MAX_USER_CREATED_REQUESTS
+        ):
+            raise Exception("Too many requests created")
+
         request = request_repo.create(
             user_id=UUID(user_id), input_request=input_request
         )
