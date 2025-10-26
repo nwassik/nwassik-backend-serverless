@@ -12,6 +12,14 @@ from typing import Optional, List
 from src.schemas.request import RequestCreate
 from uuid import UUID
 
+
+from datetime import datetime
+from typing import Dict, Any
+from sqlalchemy import asc, or_, and_
+import base64
+import json
+
+
 _request_repo_instance = None
 
 
@@ -79,56 +87,73 @@ class RequestRepository(RequestRepositoryInterface):
         with get_db_session() as db:
             return db.query(Request).filter(Request.id == request_id).first()
 
-    def get_batch_from_last_item(
-        self,
-        limit: int = 20,
-        last_id: Optional[UUID] = None,
-    ) -> List[Request]:
+    def get_user_requests(self, user_id: UUID) -> List[Request]:
         with get_db_session() as db:
-            query = db.query(Request)
+            return db.query(Request).filter(Request.user_id == user_id).all()
 
-            if last_id:
-                # Look up the last item securely in the database
-                last_request = db.query(Request).filter(Request.id == last_id).first()
+    # FIXME: The list is not working properly, and has a bug when create_at and due_date are
+    # the same in two requests. This is expected as they are necessarly unique (though it is
+    # a possible rare case due to millisecond precision on both attributes)
+    def list_of_requests(
+        self,
+        request_type: Optional[str] = None,
+        limit: int = 20,
+        cursor: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetch paginated requests with proper cursor-based pagination.
+        Earlier due dates show first, later due dates show after.
+        Requests without due_date come last, ordered by created_date ASC (oldest first).
+        Uses only date fields for ordering (UUIDs are random).
+        """
+        try:
+            # Build base query
+            query = self.db.query(Request)
 
-                if last_request:
-                    # Use the actual values from the database to construct the query
-                    if last_request.due_date is not None:
-                        query = query.filter(
-                            (Request.due_date > last_request.due_date)
-                            | (
-                                (Request.due_date == last_request.due_date)
-                                & (Request.created_at > last_request.created_at)
-                            )
-                            | (
-                                (Request.due_date == last_request.due_date)
-                                & (Request.created_at == last_request.created_at)
-                                & (Request.id > last_request.id)
-                            )
-                        )
-                    else:
-                        # Last item had NULL due_date
-                        query = query.filter(
-                            (Request.due_date.is_(None))
-                            & (
-                                (Request.created_at > last_request.created_at)
-                                | (
-                                    (Request.created_at == last_request.created_at)
-                                    & (Request.id > last_request.id)
-                                )
-                            )
-                        )
-                # If last_id not found, ignore it and start from beginning
+            # Apply type filter if provided
+            if request_type:
+                query = query.filter(Request.type == request_type)
 
-            return (
-                query.order_by(
-                    Request.due_date.asc().nulls_last(),
-                    Request.created_at.asc(),
-                    Request.id.asc(),
-                )
-                .limit(limit)
-                .all()
+            # Apply cursor-based pagination
+            if cursor:
+                cursor_data = self._decode_cursor(cursor)
+                query = self._apply_cursor_filter(query, cursor_data)
+
+            # Order by due_date ASC (earlier first), NULLS LAST, then created_date ASC
+            # No ID ordering since UUIDs are random
+            query = query.order_by(
+                asc(
+                    Request.due_date
+                ).nulls_last(),  # Earlier due_dates first, NULLs last
+                asc(
+                    Request.created_date
+                ),  # Older requests first for same due_date AND for NULL due_dates
             )
+
+            # Get one extra item to check if there's more
+            requests = query.limit(limit + 1).all()
+
+            # Check if there are more items
+            has_more = len(requests) > limit
+            if has_more:
+                requests = requests[:-1]  # Remove the extra item
+
+            # Generate next cursor
+            next_cursor = None
+            if has_more and requests:
+                next_cursor = self._generate_next_cursor(requests[-1])
+
+            return {
+                "requests": requests,
+                "pagination": {
+                    "next_cursor": next_cursor,
+                    "has_more": has_more,
+                    "limit": limit,
+                },
+            }
+
+        except Exception as e:
+            raise Exception(f"Error listing requests: {str(e)}")
 
     def update(self, request_id, data: dict) -> Request:
         with get_db_session() as db:
@@ -146,3 +171,62 @@ class RequestRepository(RequestRepositoryInterface):
                 return True
             db.delete(req)
             return True
+
+    def _generate_next_cursor(self, last_request: Request) -> str:
+        """
+        Generate cursor from the last request in the current page.
+        Only uses date fields since IDs are random UUIDs.
+        """
+        cursor_data = {
+            "due_date": last_request.due_date.isoformat()
+            if last_request.due_date
+            else None,
+            "created_date": last_request.created_at.isoformat(),
+        }
+
+        cursor_json = json.dumps(cursor_data)
+        return base64.b64encode(cursor_json.encode()).decode()
+
+    def _decode_cursor(self, cursor: str) -> Dict[str, Any]:
+        """Decode and parse cursor data."""
+        try:
+            cursor_json = base64.b64decode(cursor.encode()).decode()
+            cursor_data: Dict = json.loads(cursor_json)
+
+            # Parse dates back to datetime objects
+            if cursor_data.get("due_date"):
+                cursor_data["due_date"] = datetime.fromisoformat(
+                    cursor_data["due_date"]
+                )
+            cursor_data["created_date"] = datetime.fromisoformat(
+                cursor_data["created_date"]
+            )
+
+            return cursor_data
+        except (ValueError, json.JSONDecodeError) as e:
+            raise ValueError("Invalid cursor") from e
+
+    def _apply_cursor_filter(self, query, cursor_data):
+        """
+        Apply cursor filter using only date fields.
+        Since UUIDs are random, we accept that items with identical dates might have minor pagination issues.
+        """
+        due_date = cursor_data["due_date"]
+        created_date = cursor_data["created_date"]
+
+        if due_date:
+            # Case 1: due_date is not NULL in cursor
+            condition = or_(
+                # Requests with later due_date (should come after)
+                Request.due_date > due_date,
+                # Requests with same due_date but newer created_date (should come after)
+                and_(Request.due_date == due_date, Request.created_at > created_date),
+                # Requests with NULL due_date (these come last)
+                Request.due_date.is_(None),
+            )
+        else:
+            # Case 2: cursor had NULL due_date (we're in the NULL section)
+            # Simply get requests with newer created_date
+            condition = Request.created_date > created_date
+
+        return query.filter(condition)

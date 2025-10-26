@@ -2,92 +2,74 @@
 
 ## Product Overview
 
-**Nwassik Store** is a reverse marketplace platform designed to help users request products or services, which others (providers) can fulfill. It focuses especially on enabling people (example: in Tunisia) to request goods or services, including deliveries from abroad (example: from France), with, initially, offline cash payments between both parties (or free if accepted). It empowers individuals to get better deals, avoid high local tariffs, and enables providers to earn/save money by fulfilling these requests.
+**Nwassik Store** is a reverse marketplace platform designed to help users request products or services, which others (providers) can fulfill. It focuses especially on enabling people (example: in Tunisia) to request goods or services, including deliveries from abroad (example: from France), with, initially, offline cash payments between both parties (or free if accepted). It empowers individuals to get better deals, avoid high local tariffs, and enables providers to earn/save money when traveling by fulfilling these requests.
 
 ## What Nwassik Store Allows
 
 ### Core Actions
 
+- **Login & Register**
+  - Users can login & register via email/password and via 2 social media platforms: facebook + google
+
 - **Post a Request:**
 
-  - A user posts a request for an item or service they want
+  - A user posts a request for an item or service
   - Three request options are available:
-    - Online Service
-      - Users specify what online service they need (Netflix, plane ticket,..) and meetup location for transaction
     - Buy & Deliver service
       - Users specify what items they want bought and to where should be delivered
     - Pickup & Deliver service
       - Users specify from where items should be picked, and to where should be delivered
+    - Online Service
+      - Users specify what online service they need (Netflix, plane ticket,..) and meetup location for transaction
   - A due date can also be specified informing when the request should be completed.
+
+- **Viewing Requests:**
+  - Providers browse public listings based on filters (request type, location, due date, ..)
 
 - **Providers Respond:**
 
-  - Other users see public requests.
-  - They can offer to fulfill a posted request.
+  - Other users (providers) see public requests.
+  - They can offer to fulfill a posted request by sending a chat message
+  - Requester and Provider discuss details privately
 
 - **Private Chat Communication:**
 
-  - Providers and Requesters can communicate privately through a messaging system to negotiate details.
+  - Providers and Requesters can communicate privately through a messaging system to negotiate details
+  - They agree offline
 
 - **Offline Payment:**
 
   - Payments happen offline, usually cash on delivery or during a physical handover of the item/service.
+  - No online payments at this stage
+  - Subscription based model in the future will be used on the providers side
 
-## How It Works (Non-Technical Flow)
+## Features To Add
 
-1. **User Registration/Login**
-2. **Posting Requests:**
-   - User writes what they need.
-   - Optionally sets pickup/dropoff/meetup locations (with map based location search).
-   - Sets due date if necessary.
-3. **Viewing Requests:**
-   - Providers browse public listings based on filters (location, due date, ..)
-4. **Contact and Negotiation:**
-   - Provider sends a chat message about the request
-   - Requester and Provider discuss details privately
-5. **Agreement and Delivery:**
-   - They agree offline
-   - Provider fulfills the request
-6. **Cash Payment on Delivery:**
-   - No online payments at this stage
-   - Subscription based model in the future will be used on the providers side
+- **Trust, Safety & Reputation:** Users can report inappropriate or fraudulent requests/offers.  
+- **Ratings & Completion Feedback:** Allow requesters and providers to rate each other, even if payment occurs offline.  
+- **Verification Levels (Optional Future):** Users can verify their phone, email, or ID to increase trust, with a blue mark for verified users.  
+- **Notification System:** Notify users when a new request is posted and allow subscription to filters (service type, location, date, etc.).  
+- **Chat:** Built-in messaging between requesters and providers.  
+- **Feedback:** Users can provide feedback with text and image for me  
+- **Current Offers Page:** Separate page displaying all current offers.  
+- **Request Images:** Allow users to upload a maximum of two images per request.  
+- **Money Exchange Officer:** Add a trusted fund handler for secure money exchange and transactions.  
 
-## Technical Architecture (Serverless Version)
+## Technical Architecture
 
 ### Technologies Used
 
-| Layer                     | Technology / Service                       |
-|---------------------------|--------------------------------------------|
-| Backend API               | AWS Lambda (Python 3.13)                   |
-| API Gateway               | AWS API Gateway (REST/WebSocket endpoints) |
-| App Database              | AWS RDS/ Aurora DSQL                       |
-| Chat Database             | AWS DynamoDB                               |
-| Storage                   | AWS S3 (file uploads, static assets)       |
-| Messaging / Notifications | AWS SNS / SQS (event-driven notifications) |
-| Authentication            | AWS Cognito (user pools & JWT tokens)      |
-| App Deployment            | Serverless Framework (CloudFormation)      |
-| Infra Deployment / IaC    | Terraform                                  |
-| Monitoring / Logging      | AWS CloudWatch Logs & Metrics              |
-| Tracing                   | AWS X-Ray                                  |
-| Secrets Management        | AWS Secrets Manager / Parameter Store      |
-
----
-
-### Production (Serverless)
-
-- Backend functions deployed as **AWS Lambda** functions.  
-- REST and WebSocket APIs exposed via **AWS API Gateway**.  
-- File storage handled by **AWS S3** for uploads and static assets.  
-- Database is **AWS DynamoDB**, fully managed and serverless.  
-- Event-driven workflows (notifications, chat updates) handled by **SNS/SQS**.  
-- Authentication and user management via **AWS Cognito**.  
-- Automatic scaling is handled by AWS; Lambdas scale per request, DynamoDB scales automatically.  
-- HTTPS endpoints provided natively by API Gateway.  
-- Monitoring, logging, and tracing through **CloudWatch Logs, Metrics, and AWS X-Ray**.  
-- Secrets and environment variables managed via **AWS Secrets Manager / Parameter Store**.  
-- CI/CD Pipelines (GitHub Actions):  
-  - Install dependencies and Serverless Framework CLI  
-  - Run tests for functions locally or in CI  
-  - Deploy functions, resources, and stages to AWS  
-  - Manage Lambda versions and aliases for safe production updates  
-- Optional traffic shifting (blue/green or canary) handled via **Lambda aliases and deployment preferences**.
+| Layer                            | Technology / Service                           | Other notes                                                              |
+|----------------------------------|------------------------------------------------|--------------------------------------------------------------------------|
+| Backend API                      | AWS Lambda (Python 3.13)                       | -                                                                        |
+| API Gateway                      | AWS API Gateway (REST endpoints)               | Initially, chat part will poll messages but later will be websocket      |
+| App Database                     | AWS RDS/ Aurora DSQL                           | -                                                                        |
+| Chat Database                    | AWS DynamoDB                                   | -                                                                        |
+| Storage                          | AWS S3 (file uploads, static assets)           | Mainly to upload user profile images and Requests files upload           |
+| Chat Messaging / Notifications   | AWS SNS / SQS (event-driven notifications)     | -                                                                        |
+| Authentication & User management | Authgear/AWS Cognito (user pools & JWT tokens) | -                                                                        |
+| App Deployment                   | Serverless Framework (CloudFormation)          | -                                                                        |
+| Infra Deployment / IaC           | Terraform                                      | Mainly to setup persistance layer (RDS + DynamoDB) along with S3 buckets |
+| Monitoring / Logging             | AWS CloudWatch Logs & Metrics                  | -                                                                        |
+| Tracing                          | AWS X-Ray                                      | -                                                                        |
+| Secrets Management               | AWS Secrets Manager / Parameter Store          | To store Secrets and environment variables                               |

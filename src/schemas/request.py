@@ -15,8 +15,8 @@ class RequestCreate(BaseModel):
     due_date: Optional[datetime] = Field(None)
     type: RequestType
 
-    title: str = Field(..., max_length=100)  # TODO: decide adequate length
-    description: str = Field(..., max_length=500)  # TODO: decide adequate length
+    title: str = Field(..., max_length=100)
+    description: str = Field(..., max_length=500)
 
     # Product delivery locations
     pickup_latitude: Optional[float] = Field(None, ge=-90, le=90)
@@ -45,7 +45,7 @@ class RequestCreate(BaseModel):
     # Conditional / cross-field validation
     # -------------------------------
     @model_validator(mode="after")
-    def check_pickup_location(self):
+    def check_location(self):
         """
         Conditional validation for request types:
         - BUY_AND_DELIVER: dropoff location required
@@ -117,13 +117,13 @@ class BaseRequest(BaseModel):
     due_date: Optional[datetime] = None  # Add this
     created_at: datetime
 
-    model_config = ConfigDict(
-        from_attributes=True,  # ✅ Allow ORM objects
-        json_encoders={
-            datetime: lambda v: v.isoformat() + "Z",
-            UUID: str,
-        },
-    )
+    # model_config = ConfigDict(
+    #     from_attributes=True,  # ✅ Allow ORM objects
+    #     json_encoders={
+    #         datetime: lambda v: v.isoformat() + "Z",
+    #         UUID: str,
+    #     },
+    # )
 
 
 class BuyAndDeliverRequest(BaseRequest):
