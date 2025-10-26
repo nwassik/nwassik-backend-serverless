@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from uuid import UUID
 from src.models.request import Request
+from src.models.favorite import Favorite
 from src.schemas.request import RequestCreate
 
 
@@ -44,4 +45,28 @@ class RequestRepositoryInterface(ABC):
     @abstractmethod
     def delete(self, request_id: UUID) -> bool:
         """Delete a request by ID"""
+        pass
+
+
+class FavoriteRepositoryInterface(ABC):
+    """Interface for managing user favorites."""
+
+    @abstractmethod
+    def add(self, user_id: UUID, request_id: UUID) -> Favorite:
+        """Add a new favorite for a user."""
+        pass
+
+    @abstractmethod
+    def delete(self, user_id: UUID, request_id: UUID) -> bool:
+        """Remove a favorite by user and request."""
+        pass
+
+    @abstractmethod
+    def is_favorite(self, user_id: UUID, request_id: UUID) -> bool:
+        """Check if a given request is favorited by a specific user."""
+        pass
+
+    @abstractmethod
+    def list_user_favorites(self, user_id: UUID) -> List[Favorite]:
+        """List all favorites for a given user with no pagination."""
         pass
