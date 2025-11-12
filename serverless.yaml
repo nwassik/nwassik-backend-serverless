@@ -19,9 +19,6 @@ package:
     - "!__pycache__/**" # ← Explicitly exclude pycache
 
 custom:
-  dynamodbTables:
-    RequestsTableName: ${self:service}-dynamodb-requests-${sls:stage}
-    FavoritesTableName: ${self:service}-dynamodb-favorites-${sls:stage}
   pythonRequirements:
     usePoetry: false
     dockerizePip: true # <<--- build wheels in Docker (required for compiled deps as I am on MacOS)
@@ -44,17 +41,7 @@ provider:
   stage: NotToUseStage
   environment:
     STAGE: ${sls:stage}
-    DYNAMODB_TABLE_REQUESTS: ${self:custom.dynamodbTables.RequestsTableName}
-    DYNAMODB_TABLE_FAVORITES: ${self:custom.dynamodbTables.FavoritesTableName}
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - dynamodb:* # FIXME: too permissive
-          Resource:
-            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.dynamodbTables.RequestsTableName}*" # Indexes are mandatory
-            - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.dynamodbTables.FavoritesTableName}*"
+
 functions:
   # -----------------------------------------------------------------------------
   # HEALTH CHECK
@@ -101,95 +88,8 @@ functions:
           path: /requests/{request_id}
           method: delete
           cors: true
-
-  listMyRequests:
-    handler: src/handlers/requests/mine.list_my_requests
-    events:
-      - http:
-          path: /requests/mine
-          method: get
-          cors: true
+# TODO: Add update request
 
 # -----------------------------------------------------------------------------
 # RESOURCES
 # -----------------------------------------------------------------------------
-resources:
-  Resources:
-    # --------- DynamoDB service structured data persistence -------------------
-    RequestsTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodbTables.RequestsTableName}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: request_id
-            AttributeType: S
-          - AttributeName: ALL_REQUESTS
-            AttributeType: S
-          - AttributeName: due_date_ts
-            AttributeType: N
-          - AttributeName: user_id
-            AttributeType: S
-          - AttributeName: created_at
-            AttributeType: S
-        KeySchema:
-          - AttributeName: request_id
-            KeyType: HASH
-
-        GlobalSecondaryIndexes:
-          # GSI 1 - Global feed (sorted by due_date)
-          # TODO: Hot partition possibility in case of usage spike, but for early phase this is OK
-          # Note: Data pagination is independent of storage type (dynamodb, redis, ..), so later I can
-          # simply add Redis in front of dynamodb with Geo proximity feature/filter
-          - IndexName: AllRequestsGSI
-            KeySchema:
-              - AttributeName: ALL_REQUESTS
-                KeyType: HASH
-              - AttributeName: due_date_ts
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-
-          # GSI 2 - User-created requests
-          - IndexName: UserRequestsGSI
-            KeySchema:
-              - AttributeName: user_id
-                KeyType: HASH
-              - AttributeName: created_at
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL # TODO: Probably Should change that to INCLUDE with only necessary fields
-    FavoritesTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.dynamodbTables.FavoritesTableName}
-        BillingMode: PAY_PER_REQUEST
-        AttributeDefinitions:
-          - AttributeName: favorite_id
-            AttributeType: S
-          - AttributeName: user_id
-            AttributeType: S
-          - AttributeName: request_id
-            AttributeType: S
-        KeySchema:
-          - AttributeName: favorite_id
-            KeyType: HASH
-
-        GlobalSecondaryIndexes:
-          - IndexName: GSI_UserFavorites
-            KeySchema:
-              - AttributeName: user_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: INCLUDE
-              NonKeyAttributes:
-                - request_id
-
-          - IndexName: GSI_RequestFavorites
-            KeySchema:
-              - AttributeName: request_id
-                KeyType: HASH
-            Projection:
-              ProjectionType: INCLUDE
-              NonKeyAttributes:
-                - user_id
