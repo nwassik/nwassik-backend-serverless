@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
-from typing import Optional, Self, Union
+from typing import Optional, Self
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 from enum import Enum
 
 
@@ -114,16 +114,8 @@ class BaseRequest(BaseModel):
     type: RequestType
     title: str
     description: Optional[str] = None
-    due_date: Optional[datetime] = None  # Add this
+    due_date: Optional[datetime] = None
     created_at: datetime
-
-    # model_config = ConfigDict(
-    #     from_attributes=True,  # ✅ Allow ORM objects
-    #     json_encoders={
-    #         datetime: lambda v: v.isoformat() + "Z",
-    #         UUID: str,
-    #     },
-    # )
 
 
 class BuyAndDeliverRequest(BaseRequest):
@@ -141,13 +133,6 @@ class PickupAndDeliverRequest(BaseRequest):
 class OnlineServiceRequest(BaseRequest):
     meetup_latitude: float
     meetup_longitude: float
-
-
-CompleteRequest = Union[
-    BuyAndDeliverRequest,
-    PickupAndDeliverRequest,
-    OnlineServiceRequest,
-]
 
 
 class RequestUpdate(BaseModel):
@@ -168,6 +153,7 @@ class RequestUpdate(BaseModel):
         return self
 
 
+# TODO: This is for the filtering of requests to return to end user based on coordinates
 class LocationFilter(BaseModel):
     lat: Optional[float] = Field(None, ge=-90, le=90)
     lng: Optional[float] = Field(None, ge=-180, le=180)

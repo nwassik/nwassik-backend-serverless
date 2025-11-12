@@ -3,7 +3,7 @@ from src.repositories.favorite_repository import get_favorite_repository
 from uuid import UUID
 
 
-def list_user_requests(event, context):
+def list_user_favorites(event, _):
     favorite_repo = get_favorite_repository()
 
     try:

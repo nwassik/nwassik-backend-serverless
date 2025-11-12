@@ -12,8 +12,15 @@ def delete_request(event, _):
 
         request = request_repo.get_by_id(request_id)
 
+        # NOTE: This is to be idempotent
         if not request:
-            return True
+            return success(
+                {
+                    "message": "Request deleted successfully",
+                    "request_id": str(request_id),
+                }
+            )
+
         if request.user_id != user_id:
             return error(
                 "Forbidden: you can only delete your own requests", status_code=403
@@ -22,7 +29,10 @@ def delete_request(event, _):
         request_repo.delete(request_id=request_id)
 
         return success(
-            {"message": "Request deleted successfully", "request_id": str(request_id)}
+            {
+                "message": "Request deleted successfully",
+                "request_id": str(request_id),
+            }
         )
     except Exception as e:
         return error(str(e))

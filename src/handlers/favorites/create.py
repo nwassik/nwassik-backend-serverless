@@ -3,10 +3,12 @@ from uuid import UUID
 
 from src.lib.responses import success, error
 from src.repositories.favorite_repository import get_favorite_repository
+from src.repositories.request_repository import get_request_repository
 
 
 def create_favorite(event, _):
     favorite_repo = get_favorite_repository()
+    request_repo = get_request_repository()
 
     # TODO: Put a limit on favorite items per user maybe 100
     try:
@@ -16,6 +18,10 @@ def create_favorite(event, _):
         body = json.loads(event.get("body", "{}"))
 
         request_id = UUID(body.get("request_id"))
+        request = request_repo.get_by_id(request_id=request_id)
+
+        if not request:
+            return error("Request not found", 404)
 
         # Add favorite (repository handles idempotance)
         favorite = favorite_repo.create(user_id=user_id, request_id=request_id)

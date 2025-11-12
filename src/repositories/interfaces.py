@@ -21,6 +21,11 @@ class RequestRepositoryInterface(ABC):
         """Get a request by its ID"""
         pass
 
+    @abstractmethod
+    def get_user_requests(self, user_id: UUID) -> List[Request]:
+        """Get requests of a user"""
+        pass
+
     # TODO: @abstractmethod
     def get_batch_from_last_item(
         self,

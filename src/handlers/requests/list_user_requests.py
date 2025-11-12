@@ -3,11 +3,11 @@ from src.repositories.request_repository import get_request_repository
 from uuid import UUID
 
 
-def list_user_requests(event, context):
+def list_user_requests(event, _):
     request_repo = get_request_repository()
 
     try:
-        # NOTE: This is not necessarly the logged in user
+        # NOTE: This is not necessarly the logged in user so there is no authorization check
         user_id = UUID(event.get("pathParameters", {}).get("user_id"))
         requests = request_repo.get_user_requests(user_id=user_id)
         return success(

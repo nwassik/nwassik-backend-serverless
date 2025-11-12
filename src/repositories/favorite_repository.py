@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from src.repositories.interfaces import FavoriteRepositoryInterface
 from src.db.session import get_db_session
 

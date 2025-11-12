@@ -12,8 +12,14 @@ def delete_request(event, _):
 
         favorite = favorite_repo.get_by_id(favorite_id=favorite_id)
 
+        # NOTE: This is to be idempotent
         if not favorite:
-            return True
+            return success(
+                {
+                    "message": "Request deleted successfully",
+                    "favorite_id": str(favorite_id),
+                }
+            )
         if favorite.user_id != user_id:
             return error(
                 "Forbidden: you can only delete your own requests", status_code=403
@@ -22,7 +28,10 @@ def delete_request(event, _):
         favorite_repo.delete(favorite_id=favorite_id)
 
         return success(
-            {"message": "Request deleted successfully", "favorite_id": str(favorite_id)}
+            {
+                "message": "Request deleted successfully",
+                "favorite_id": str(favorite_id),
+            }
         )
     except Exception as e:
         return error(str(e))
