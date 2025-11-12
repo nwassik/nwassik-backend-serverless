@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .types import GUID
-from .request import Base
+from .base import Base
 
 
 class Favorite(Base):
