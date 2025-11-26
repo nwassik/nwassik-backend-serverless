@@ -1,8 +1,15 @@
 [tool.ruff]
 select = ["ALL"]
-line-length = 88
+line-length = 100
 target-version = "py311"
 show-fixes = true
+ignore = [
+  "TD002",
+  "TD003",
+  "FIX002",
+  "PGH004",
+  "D102",
+] # Should be enabled for multi developers context
 
 [tool.ruff.isort]
 known-first-party = ["your_project"]

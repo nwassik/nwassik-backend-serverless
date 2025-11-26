@@ -1,23 +1,23 @@
+"""Request Creation Handler."""
+
 import json
-from src.lib.responses import success, error
-from src.schemas.request import RequestCreate
-from src.repositories.request_repository import get_request_repository
 from uuid import UUID
+
 from config import MAX_USER_CREATED_REQUESTS
+from src.lib.responses import error, success
+from src.repositories.request_repository import get_request_repository
+from src.schemas.request import RequestCreate
 
 
-def create_request(event, _):
+def create_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
         claims = event.get("requestContext").get("authorizer").get("claims")
         user_id = UUID(claims.get("sub"))
 
         # NOTE: Fail early
-        if (
-            len(request_repo.get_user_requests(user_id=user_id))
-            >= MAX_USER_CREATED_REQUESTS
-        ):
-            raise Exception("Too many requests created")
+        if len(request_repo.get_user_requests(user_id=user_id)) >= MAX_USER_CREATED_REQUESTS:
+            raise Exception("Too many requests created")  # noqa: TRY301
 
         body = json.loads(event.get("body", "{}"))
 
@@ -36,7 +36,7 @@ def create_request(event, _):
             {
                 "message": "Request created successfully",
                 "request_id": str(request.id),
-            }
+            },
         )
     except Exception as e:
         return error(str(e))

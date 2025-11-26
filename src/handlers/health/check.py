@@ -1,17 +1,14 @@
+"""Health Check Module."""
+
 import json
+from typing import Any
 
 
-def health_check(event, context):
-    """
-    Simple health check Lambda function.
-
-    Returns HTTP 200 with a JSON body indicating service status.
-    """
+def health_check(event, context) -> dict[str, Any]:  # noqa: ANN001, ARG001
+    """Check Lambda Functions Dummy."""
     # TODO: Change this to real health check
-    response = {
+    return {
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
         "body": json.dumps({"status": "ok", "message": "Service is healthy"}),
     }
-
-    return response

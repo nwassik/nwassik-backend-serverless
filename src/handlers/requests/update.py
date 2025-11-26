@@ -1,11 +1,14 @@
+"""Request Update Handler."""
+
 import json
 from uuid import UUID
-from src.lib.responses import success, error
+
+from src.lib.responses import error, success
 from src.repositories.request_repository import get_request_repository
 from src.schemas.request import RequestUpdate
 
 
-def update_request(event, _):
+def update_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
         claims = event.get("requestContext").get("authorizer").get("claims")
@@ -25,9 +28,7 @@ def update_request(event, _):
 
         request_repo.update(request_id=request_id, request_update=request_update)
 
-        return success(
-            {"message": "Request updated successfully", "request_id": request_id}
-        )
+        return success({"message": "Request updated successfully", "request_id": request_id})
 
     except Exception as e:
         return error(str(e))

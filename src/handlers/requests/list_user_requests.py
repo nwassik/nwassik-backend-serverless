@@ -1,9 +1,12 @@
-from src.lib.responses import success, error
-from src.repositories.request_repository import get_request_repository
+"""User Requests List Handler."""
+
 from uuid import UUID
 
+from src.lib.responses import error, success
+from src.repositories.request_repository import get_request_repository
 
-def list_user_requests(event, _):
+
+def list_user_requests(event, _):  # noqa
     request_repo = get_request_repository()
 
     try:
@@ -15,7 +18,7 @@ def list_user_requests(event, _):
                 "requests": [req.to_dict() for req in requests],
                 "user_id": user_id,
                 "total": len(requests),
-            }
+            },
         )
     except Exception as e:
         return error(str(e))

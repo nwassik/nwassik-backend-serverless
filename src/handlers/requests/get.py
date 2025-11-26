@@ -1,9 +1,12 @@
-from src.lib.responses import success, error
-from src.repositories.request_repository import get_request_repository
+"""Request Get Handler."""
+
 from uuid import UUID
 
+from src.lib.responses import error, success
+from src.repositories.request_repository import get_request_repository
 
-def get_request(event, _):
+
+def get_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
         request_id = UUID(event.get("pathParameters", {}).get("request_id"))
