@@ -17,7 +17,8 @@ def create_request(event, _):  # noqa
 
         # NOTE: Fail early
         if len(request_repo.get_user_requests(user_id=user_id)) >= MAX_USER_CREATED_REQUESTS:
-            raise Exception("Too many requests created")  # noqa: TRY301
+            exception_msg = "Too many requests created"
+            raise Exception(exception_msg)  # noqa: TRY301
 
         body = json.loads(event.get("body", "{}"))
 

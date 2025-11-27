@@ -1,28 +1,28 @@
+"""Favorite SQLAlchemy Model definition."""
+
 import uuid
 from datetime import datetime
 
 from sqlalchemy import (
     Column,
-    String,
-    Float,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
+    String,
 )
 from sqlalchemy.orm import relationship
 
-from .base import Base
 from src.schemas.request import RequestType
+
+from .base import Base
 from .types import GUID
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 # TODO: Add fragile field, item size and weight
 class Request(Base):
+    """Request base Table Definition."""
+
     __tablename__ = "requests"
     __allow_unmapped__ = True  # This is to keep my annotations for type hints for now
 
@@ -57,7 +57,7 @@ class Request(Base):
         lazy="joined",
     )
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, str]:
         tmp_due_date = None
         if self.due_date:
             tmp_due_date = self.due_date.isoformat()
@@ -82,6 +82,8 @@ class Request(Base):
 
 
 class BuyAndDeliverRequest(Base):
+    """BuyAndDeliverRequest Table Definition."""
+
     __tablename__ = "buy_and_deliver_requests"
 
     request_id = Column(
@@ -94,7 +96,7 @@ class BuyAndDeliverRequest(Base):
 
     request = relationship("Request", back_populates="buy_and_deliver")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Float]:
         # Only return subtype-specific fields
         return {
             "dropoff_latitude": self.dropoff_latitude,
@@ -103,6 +105,8 @@ class BuyAndDeliverRequest(Base):
 
 
 class PickupAndDeliverRequest(Base):
+    """PickupAndDeliverRequest Table Definition."""
+
     __tablename__ = "pickup_and_deliver_requests"
 
     request_id = Column(
@@ -117,7 +121,7 @@ class PickupAndDeliverRequest(Base):
 
     request = relationship("Request", back_populates="pickup_and_deliver")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Float]:
         return {
             "pickup_latitude": self.pickup_latitude,
             "pickup_longitude": self.pickup_longitude,
@@ -127,6 +131,8 @@ class PickupAndDeliverRequest(Base):
 
 
 class OnlineServiceRequest(Base):
+    """OnlineServiceRequest Table Definition."""
+
     __tablename__ = "online_service_requests"
 
     request_id = Column(
@@ -139,7 +145,7 @@ class OnlineServiceRequest(Base):
 
     request = relationship("Request", back_populates="online_service")
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, float]:
         return {
             "meetup_latitude": self.meetup_latitude,
             "meetup_longitude": self.meetup_longitude,

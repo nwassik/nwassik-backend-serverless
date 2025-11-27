@@ -4,8 +4,10 @@ line-length = 100
 target-version = "py311"
 show-fixes = true
 ignore = [
+  "TD001",
   "TD002",
   "TD003",
+  "FIX001",
   "FIX002",
   "PGH004",
   "D102",

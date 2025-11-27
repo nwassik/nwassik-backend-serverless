@@ -127,7 +127,7 @@ class RequestRepository(RequestRepositoryInterface):
             query = query.order_by(
                 asc(Request.due_date).nulls_last(),  # Earlier due_dates first, NULLs last
                 asc(
-                    Request.created_date
+                    Request.created_date,
                 ),  # Older requests first for same due_date AND for NULL due_dates
             )
 

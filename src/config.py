@@ -1,4 +1,4 @@
-"""Public module for configuration the application."""
+"""Public module for application configuration."""
 
 import json
 import os

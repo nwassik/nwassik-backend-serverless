@@ -1,9 +1,12 @@
-from src.lib.responses import success, error
-from src.repositories.favorite_repository import get_favorite_repository
+"""Favorite Deletion Handler."""
+
 from uuid import UUID
 
+from src.lib.responses import error, success
+from src.repositories.favorite_repository import get_favorite_repository
 
-def delete_request(event, _):
+
+def delete_request(event, _):  # noqa
     favorite_repo = get_favorite_repository()
     try:
         favorite_id = UUID(event.get("pathParameters", {}).get("favorite_id"))
@@ -18,12 +21,10 @@ def delete_request(event, _):
                 {
                     "message": "Request deleted successfully",
                     "favorite_id": str(favorite_id),
-                }
+                },
             )
         if favorite.user_id != user_id:
-            return error(
-                "Forbidden: you can only delete your own requests", status_code=403
-            )
+            return error("Forbidden: you can only delete your own requests", status_code=403)
 
         favorite_repo.delete(favorite_id=favorite_id)
 
@@ -31,7 +32,7 @@ def delete_request(event, _):
             {
                 "message": "Request deleted successfully",
                 "favorite_id": str(favorite_id),
-            }
+            },
         )
     except Exception as e:
         return error(str(e))

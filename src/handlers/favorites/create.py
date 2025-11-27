@@ -1,12 +1,14 @@
+"""Favorite Creation Handler."""
+
 import json
 from uuid import UUID
 
-from src.lib.responses import success, error
+from src.lib.responses import error, success
 from src.repositories.favorite_repository import get_favorite_repository
 from src.repositories.request_repository import get_request_repository
 
 
-def create_favorite(event, _):
+def create_favorite(event, _):  # noqa
     favorite_repo = get_favorite_repository()
     request_repo = get_request_repository()
 
@@ -30,7 +32,7 @@ def create_favorite(event, _):
             {
                 "message": "Favorite created successfully",
                 "favorite_id": str(favorite.id),
-            }
+            },
         )
 
     except Exception as e:
