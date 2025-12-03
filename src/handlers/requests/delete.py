@@ -15,13 +15,14 @@ def delete_request(event, _):  # noqa
 
         request = request_repo.get_by_id(request_id)
 
-        # NOTE: This is to be idempotent
+        # NOTE: This is done to be idempotent
         if not request:
             return success(
-                {
+                data={
                     "message": "Request deleted successfully",
                     "request_id": str(request_id),
                 },
+                status_code=204,
             )
 
         if request.user_id != user_id:
@@ -30,10 +31,11 @@ def delete_request(event, _):  # noqa
         request_repo.delete(request_id=request_id)
 
         return success(
-            {
+            data={
                 "message": "Request deleted successfully",
                 "request_id": str(request_id),
             },
+            status_code=204,
         )
     except Exception as e:
         return error(str(e))

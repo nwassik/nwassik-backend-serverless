@@ -28,7 +28,16 @@ def update_request(event, _):  # noqa
 
         request_repo.update(request_id=request_id, request_update=request_update)
 
-        return success({"message": "Request updated successfully", "request_id": request_id})
+        # TODO:
+        #   - return whether 204 or 200 with proper respective response body content
+        #   - 204 -> No content
+        #   - 200 -> Full request body
+        return success(
+            data={
+                "message": "Request updated successfully",
+                "request_id": request_id,
+            },
+        )
 
     except Exception as e:
         return error(str(e))

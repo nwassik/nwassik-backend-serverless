@@ -22,9 +22,12 @@ _request_repo_instance = None
 
 
 # NOTE: for now I keep this as a singleton, though it does not mean that
-# DB sessions are the same across same AWS lambda calls. Actually, get_db_session,
-# for now creates a new session for every call, so we are safe. I am keeping this
-# in case I move out from Lambda to something like FlaskAPI/FastAPI, where I can
+# DB sessions are the same across multiple sequential calls via a single aws
+# lambda instance.
+# Even though the RequestRepository is a singleton, it does not hold a single long-lived SQLAlchemy
+# session.
+# Actually, get_db_session, for now creates a new session for every call, so we are safe.
+# I am keeping this in case I move out from Lambda to something like FlaskAPI/FastAPI, where I can
 # reuse long running sessions. AWS Lambda are short lived/running environments.
 def get_request_repository() -> "RequestRepository":
     """Get a request repository instance."""
