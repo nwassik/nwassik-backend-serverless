@@ -1,4 +1,15 @@
 {
+  "scripts": {
+    "deploy:dev": "NODE_NO_WARNINGS=1 serverless deploy --stage dev",
+    "deploy:staging": "NODE_NO_WARNINGS=1 serverless deploy --stage staging",
+    "deploy:prod": "NODE_NO_WARNINGS=1 serverless deploy --stage prod",
+    "remove:dev": "NODE_NO_WARNINGS=1 serverless remove --stage dev",
+    "remove:staging": "NODE_NO_WARNINGS=1 serverless remove --stage staging",
+    "remove:prod": "NODE_NO_WARNINGS=1 serverless remove --stage prod",
+    "init-db:dev": "RUN_ENV=cloud STAGE=dev AWS_REGION=eu-west-3 DATABASE_SECRET_NAME=nwassik/dev/admin-db-secret BASE_DOMAIN=https://api-dev.nwassik.com MAX_USER_CREATED_FAVORITES=100 MAX_USER_CREATED_REQUESTS=20 python scripts/init_db.py",
+    "init-db:staging": "RUN_ENV=cloud STAGE=staging AWS_REGION=eu-west-3 DATABASE_SECRET_NAME=nwassik/staging/admin-db-secret BASE_DOMAIN=https://api-staging.nwassik.com MAX_USER_CREATED_FAVORITES=100 MAX_USER_CREATED_REQUESTS=20 python scripts/init_db.py",
+    "init-db:prod": "RUN_ENV=cloud STAGE=prod AWS_REGION=eu-west-3 DATABASE_SECRET_NAME=nwassik/prod/admin-db-secret BASE_DOMAIN=https://api.nwassik.com MAX_USER_CREATED_FAVORITES=100 MAX_USER_CREATED_REQUESTS=20 python scripts/init_db.py"
+  },
   "devDependencies": {
     "serverless-python-requirements": "^6.1.2"
   }

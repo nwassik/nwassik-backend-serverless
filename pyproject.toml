@@ -3,6 +3,9 @@ select = ["ALL"]
 line-length = 100
 target-version = "py311"
 show-fixes = true
+exclude = [
+  "scripts/init_db.py",  # Database initialization script - ignore linting
+]
 ignore = [
   "TD001",
   "TD002",

@@ -1,6 +1,6 @@
 """Pydantic schemas for service request validation and serialization."""
 
-import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Self
 from uuid import UUID
@@ -19,7 +19,7 @@ class RequestType(str, Enum):
 class RequestCreate(BaseModel):
     """Schema for creating a new service request."""
 
-    due_date: datetime.datetime | None = Field(None)
+    due_date: datetime | None = Field(None)
     type: RequestType
 
     title: str = Field(..., max_length=100)
@@ -38,7 +38,7 @@ class RequestCreate(BaseModel):
     @model_validator(mode="after")
     def validate_due_date(self) -> Self:
         """Ensure due date is timezone-aware and set in the future."""
-        now_utc = datetime.now(datetime.UTC)
+        now_utc = datetime.now(UTC)
 
         # Ensure due_date is timezone-aware and in the future
         if self.due_date is not None:
@@ -126,7 +126,7 @@ class BaseRequest(BaseModel):
     type: RequestType
     title: str
     description: str | None = None
-    due_date: datetime.datetime | None = None
+    due_date: datetime | None = None
     created_at: datetime
 
 

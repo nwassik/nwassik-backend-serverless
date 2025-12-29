@@ -1,7 +1,7 @@
 """Favorite SQLAlchemy Model definition."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import Column, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -28,7 +28,7 @@ class Favorite(Base):
 
     created_at: "datetime" = Column(
         DateTime(timezone=True),
-        default=datetime.now(datetime.UTC),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     )
 

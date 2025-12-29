@@ -19,6 +19,13 @@ package:
     - "!node_modules/**" # ← Explicitly exclude node_modules
     - "!__pycache__/**" # ← Explicitly exclude pycache
 custom:
+  # IMPORTANT: Always deploy with --stage flag (dev, staging, or prod)
+  # Default stage 'NotToUseStage' will fail to force explicit stage selection
+  allowedStages:
+    - dev
+    - staging
+    - prod
+
   stages:
     prod:
       baseDomain: https://api.nwassik.com # Required, otherwise make follow below format
@@ -59,12 +66,12 @@ provider:
   name: aws
   runtime: python3.11
   region: eu-west-3
-  stage: NotToUseStage
+  stage: NotToUseStage # NOTE: this is kept as a safeguard to force explicit stage selection as serverless framework defaults to dev...
   environment:
     RUN_ENV: cloud # Running in AWS Lambda (cloud) vs local
     STAGE: ${sls:stage} # used in Python code to detect Lambda stage
     BASE_DOMAIN: ${self:custom.stages.${sls:stage}.baseDomain, 'https://api-${sls:stage}.nwassik.com'} # Stage-specific API domain
-    DATABASE_SECRET_NAME: "nwassik/${sls:stage}/app-db-secret" # Secrets Manager secret
+    DATABASE_SECRET_NAME: "nwassik/${sls:stage}/app-db-secret" # Secrets Manager secret for application
     MAX_USER_CREATED_REQUESTS: 20
     MAX_USER_CREATED_FAVORITES: 100
   iam:

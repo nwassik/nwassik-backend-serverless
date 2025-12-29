@@ -1,7 +1,7 @@
 """Request SQLAlchemy Model definition."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Column,
@@ -36,7 +36,7 @@ class Request(Base):
 
     due_date: "datetime" = Column(DateTime(timezone=True), nullable=True)
     created_at: "datetime" = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(datetime.UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
 
     # Relationships for easy access

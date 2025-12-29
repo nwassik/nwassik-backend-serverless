@@ -6,7 +6,7 @@ from typing import Any
 
 def success(
     data: dict[str, Any],
-    extra_headers: dict[str, str] | None,
+    extra_headers: dict[str, str] | None = None,
     status_code: int = 200,
 ) -> dict[str, Any]:
     """Wrap success object."""
