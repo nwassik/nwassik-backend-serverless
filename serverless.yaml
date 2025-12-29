@@ -73,7 +73,7 @@ provider:
         - Effect: Allow
           Action:
             - secretsmanager:GetSecretValue
-          Resource: arn:aws:secretsmanager:eu-west-3:689688455606:secret:rds!nwassik-${sls:stage}-app-db-secret
+          Resource: arn:aws:secretsmanager:eu-west-3:689688455606:secret:rds!nwassik-${sls:stage}-app-db-secret-*
 
 functions:
   # -----------------------------------------------------------------------------
@@ -149,7 +149,7 @@ functions:
           cors: *corsConfig
 
   deleteFavorite:
-    handler: src/handlers/favorites/delete.delete_request
+    handler: src/handlers/favorites/delete.delete_favorite
     events:
       - http:
           path: /favorites/{favorite_id}

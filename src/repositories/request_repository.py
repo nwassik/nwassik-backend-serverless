@@ -109,56 +109,57 @@ class RequestRepository(RequestRepositoryInterface):
 
         Fetch paginated requests with proper cursor-based pagination.
         Earlier due dates show first, later due dates show after.
-        Requests without due_date come last, ordered by created_date ASC (oldest first).
+        Requests without due_date come last, ordered by created_at ASC (oldest first).
         Uses only date fields for ordering (UUIDs are random).
         """
-        try:
-            # Build base query
-            query = self.db.query(Request)
+        with get_db_session() as db:
+            try:
+                # Build base query
+                query = db.query(Request)
 
-            # Apply type filter if provided
-            if request_type:
-                query = query.filter(Request.type == request_type)
+                # Apply type filter if provided
+                if request_type:
+                    query = query.filter(Request.type == request_type)
 
-            # Apply cursor-based pagination
-            if cursor:
-                cursor_data = self._decode_cursor(cursor)
-                query = self._apply_cursor_filter(query, cursor_data)
+                # Apply cursor-based pagination
+                if cursor:
+                    cursor_data = self._decode_cursor(cursor)
+                    query = self._apply_cursor_filter(query, cursor_data)
 
-            # Order by due_date ASC (earlier first), NULLS LAST, then created_date ASC
-            # No ID ordering since UUIDs are random
-            query = query.order_by(
-                asc(Request.due_date).nulls_last(),  # Earlier due_dates first, NULLs last
-                asc(
-                    Request.created_date,
-                ),  # Older requests first for same due_date AND for NULL due_dates
-            )
+                # Order by due_date ASC (earlier first), NULLS LAST, then created_at ASC
+                # No ID ordering since UUIDs are random
+                query = query.order_by(
+                    asc(Request.due_date).nulls_last(),  # Earlier due_dates first, NULLs last
+                    asc(
+                        Request.created_at,
+                    ),  # Older requests first for same due_date AND for NULL due_dates
+                )
 
-            # Get one extra item to check if there's more
-            requests = query.limit(limit + 1).all()
+                # Get one extra item to check if there's more
+                requests = query.limit(limit + 1).all()
 
-            # Check if there are more items
-            has_more = len(requests) > limit
-            if has_more:
-                requests = requests[:-1]  # Remove the extra item
+                # Check if there are more items
+                has_more = len(requests) > limit
+                if has_more:
+                    requests = requests[:-1]  # Remove the extra item
 
-            # Generate next cursor
-            next_cursor = None
-            if has_more and requests:
-                next_cursor = self._generate_next_cursor(requests[-1])
+                # Generate next cursor
+                next_cursor = None
+                if has_more and requests:
+                    next_cursor = self._generate_next_cursor(requests[-1])
 
-            return {
-                "requests": requests,
-                "pagination": {
-                    "next_cursor": next_cursor,
-                    "has_more": has_more,
-                    "limit": limit,
-                },
-            }
+                return {
+                    "requests": requests,
+                    "pagination": {
+                        "next_cursor": next_cursor,
+                        "has_more": has_more,
+                        "limit": limit,
+                    },
+                }
 
-        except Exception as e:
-            exception_msg = f"Error listing requests: {e!r}"
-            raise Exception(exception_msg) from e
+            except Exception as e:
+                exception_msg = f"Error listing requests: {e!r}"
+                raise Exception(exception_msg) from e
 
     def update(self, request_id: UUID, request_update: RequestUpdate) -> Request:
         with get_db_session() as db:
@@ -188,7 +189,7 @@ class RequestRepository(RequestRepositoryInterface):
         """
         cursor_data = {
             "due_date": last_request.due_date.isoformat() if last_request.due_date else None,
-            "created_date": last_request.created_at.isoformat(),
+            "created_at": last_request.created_at.isoformat(),
         }
 
         cursor_json = json.dumps(cursor_data)
@@ -203,7 +204,7 @@ class RequestRepository(RequestRepositoryInterface):
             # Parse dates back to datetime objects
             if cursor_data.get("due_date"):
                 cursor_data["due_date"] = datetime.fromisoformat(cursor_data["due_date"])
-            cursor_data["created_date"] = datetime.fromisoformat(cursor_data["created_date"])
+            cursor_data["created_at"] = datetime.fromisoformat(cursor_data["created_at"])
 
             return cursor_data
         except (ValueError, json.JSONDecodeError) as e:
@@ -217,21 +218,21 @@ class RequestRepository(RequestRepositoryInterface):
         pagination issues.
         """
         due_date = cursor_data["due_date"]
-        created_date = cursor_data["created_date"]
+        created_at = cursor_data["created_at"]
 
         if due_date:
             # Case 1: due_date is not NULL in cursor
             condition = or_(
                 # Requests with later due_date (should come after)
                 Request.due_date > due_date,
-                # Requests with same due_date but newer created_date (should come after)
-                and_(Request.due_date == due_date, Request.created_at > created_date),
+                # Requests with same due_date but newer created_at (should come after)
+                and_(Request.due_date == due_date, Request.created_at > created_at),
                 # Requests with NULL due_date (these come last)
                 Request.due_date.is_(None),
             )
         else:
             # Case 2: cursor had NULL due_date (we're in the NULL section)
-            # Simply get requests with newer created_date
-            condition = Request.created_date > created_date
+            # Simply get requests with newer created_at
+            condition = Request.created_at > created_at
 
         return query.filter(condition)

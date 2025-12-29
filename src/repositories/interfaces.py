@@ -29,14 +29,12 @@ class RequestRepositoryInterface(ABC):  # noqa: D101
         self,
         limit: int = 20,
         offset: int = 0,
-    ) -> List[Request]:
-        """Get a batch of requests with pagination"""
-        pass
+    ) -> list[Request]:
+        """Get a batch of requests with pagination."""
 
     # TODO: @abstractmethod
     def get_batch_from_due_date(self, start_due_date: datetime, limit: int = 20) -> list[Request]:
-        """Get a batch of requests starting from specific due date"""
-        pass
+        """Get a batch of requests starting from specific due date."""
 
     @abstractmethod
     def update(self, request_id: UUID, data: dict[str, Any]) -> Request | None:
