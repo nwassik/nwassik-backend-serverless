@@ -44,16 +44,16 @@ custom:
         --upgrade \
         -r requirements.txt
 
-  # Centralized CORS configuration
-  corsConfig: &corsConfig
-    origin:
-      - http://localhost:8080
-      - https://nwassik.com
-      - https://www.nwassik.com
-    headers:
-      - Content-Type
-      - Authorization
-    allowCredentials: true
+  # Centralized CORS configuration (commented out for initial deployment)
+  # corsConfig: &corsConfig
+  #   origin:
+  #     - http://localhost:8080
+  #     - https://nwassik.com
+  #     - https://www.nwassik.com
+  #   headers:
+  #     - Content-Type
+  #     - Authorization
+  #   allowCredentials: true
 
 provider:
   name: aws
@@ -99,7 +99,7 @@ functions:
       - http:
           path: /requests
           method: get
-          cors: *corsConfig
+          # cors: *corsConfig
 
   createRequest:
     handler: src/handlers/requests/create.create_request
@@ -107,7 +107,7 @@ functions:
       - http:
           path: /requests
           method: post
-          cors: *corsConfig
+          # cors: *corsConfig
 
   getRequest:
     handler: src/handlers/requests/get.get_request
@@ -115,7 +115,7 @@ functions:
       - http:
           path: /requests/{request_id}
           method: get
-          cors: *corsConfig
+          # cors: *corsConfig
 
   listUserRequests:
     handler: src/handlers/requests/list_user_requests.list_user_requests
@@ -123,7 +123,7 @@ functions:
       - http:
           path: /users/{user_id}/requests
           method: get
-          cors: *corsConfig
+          # cors: *corsConfig
 
   deleteRequest:
     handler: src/handlers/requests/delete.delete_request
@@ -131,7 +131,7 @@ functions:
       - http:
           path: /requests/{request_id}
           method: delete
-          cors: *corsConfig
+          # cors: *corsConfig
 
   updateRequest:
     handler: src/handlers/requests/update.update_request
@@ -139,7 +139,7 @@ functions:
       - http:
           path: /requests/{request_id}
           method: patch
-          cors: *corsConfig
+          # cors: *corsConfig
 
   # -----------------------------------------------------------------------------
   # FAVORITES
@@ -150,7 +150,7 @@ functions:
       - http:
           path: /favorites
           method: post
-          cors: *corsConfig
+          # cors: *corsConfig
 
   deleteFavorite:
     handler: src/handlers/favorites/delete.delete_favorite
@@ -158,7 +158,7 @@ functions:
       - http:
           path: /favorites/{favorite_id}
           method: delete
-          cors: *corsConfig
+          # cors: *corsConfig
 
   listUserFavorites:
     handler: src/handlers/favorites/list.list_user_favorites
@@ -166,7 +166,7 @@ functions:
       - http:
           path: /favorites
           method: get
-          cors: *corsConfig
+          # cors: *corsConfig
 # -----------------------------------------------------------------------------
 # RESOURCES
 # -----------------------------------------------------------------------------
