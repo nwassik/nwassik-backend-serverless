@@ -85,11 +85,12 @@ provider:
   #   ✅ 60% faster (lower latency)
   #   ✅ Native and simple JWT authentication support
   #   ✅ Built-in CORS support
-  #   ✅ Simple throttling config (burstLimit + rateLimit)
   #   ✅ Supports OpenAPI documentation
   #   ❌ Does NOT support request validation at gateway level
   #      (REST API can validate before Lambda runs; HTTP API cannot)
-  #      This means Lambdas may execute for invalid requests - validation must be done in code
+  #      Validation must be done in Lambda code
+  #   ❌ Global throttling only (not per-user)
+  #      Per-user rate limiting will be implemented in Lambda with Redis/DynamoDB later
   httpApi:
     # TODO: Add CORS configuration when connecting frontend
     authorizers:
@@ -99,10 +100,6 @@ provider:
         issuerUrl: https://cognito-idp.${aws:region}.amazonaws.com/${self:custom.stages.${sls:stage}.cognitoUserPoolId}
         audience:
           - ${self:custom.stages.${sls:stage}.cognitoAppClientId}
-    # Default throttling settings (can be overridden per route)
-    throttle:
-      burstLimit: 100  # Maximum concurrent requests
-      rateLimit: 50    # Requests per second
 
 functions:
   # -----------------------------------------------------------------------------
