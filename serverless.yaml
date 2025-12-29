@@ -64,7 +64,7 @@ provider:
     RUN_ENV: cloud # Running in AWS Lambda (cloud) vs local
     STAGE: ${sls:stage} # used in Python code to detect Lambda stage
     BASE_DOMAIN: ${self:custom.stages.${sls:stage}.baseDomain, 'https://api-${sls:stage}.nwassik.com'} # Stage-specific API domain
-    DATABASE_SECRET_NAME: "rds!nwassik-${sls:stage}-app-db-secret" # Secrets Manager secret
+    DATABASE_SECRET_NAME: "nwassik/${sls:stage}/app-db-secret" # Secrets Manager secret
     MAX_USER_CREATED_REQUESTS: 20
     MAX_USER_CREATED_FAVORITES: 100
   iam:
@@ -73,7 +73,11 @@ provider:
         - Effect: Allow
           Action:
             - secretsmanager:GetSecretValue
-          Resource: arn:aws:secretsmanager:eu-west-3:689688455606:secret:rds!nwassik-${sls:stage}-app-db-secret-*
+          Resource: arn:aws:secretsmanager:eu-west-3:689688455606:secret:nwassik/${sls:stage}/app-db-secret-*
+        - Effect: Allow
+          Action:
+            - dsql:DbConnect
+          Resource: arn:aws:dsql:eu-west-3:689688455606:cluster/*
 
 functions:
   # -----------------------------------------------------------------------------

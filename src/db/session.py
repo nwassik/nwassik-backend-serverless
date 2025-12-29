@@ -15,7 +15,9 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
-# FIXME: Need to add RDS Proxy or at least handle connection errors in case secret is rotated
+# NOTE: Aurora DSQL handles connection pooling automatically (no proxy needed)
+# IAM auth tokens auto-refresh, so no credential rotation issues
+# In case I go back to RDS, I need to use RDS proxy for connections pooling
 @contextmanager
 def get_db_session():  # noqa
     session = SessionLocal()
