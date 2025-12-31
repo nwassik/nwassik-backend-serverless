@@ -20,7 +20,7 @@ def list_user_requests(event, _):  # noqa
         return success(
             {
                 "requests": [req.to_dict() for req in requests],
-                "user_id": user_id,
+                "user_id": str(user_id),
                 "total": len(requests),
             },
         )

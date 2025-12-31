@@ -14,8 +14,9 @@ def create_favorite(event, _):  # noqa
 
     # TODO: Put a limit on favorite items per user maybe 100
     try:
-        claims = event.get("requestContext").get("authorizer").get("claims")
-        user_id = UUID(claims.get("sub"))
+        # HTTP API JWT authorizer structure: requestContext.authorizer.jwt.claims
+        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+        user_id = UUID(claims["sub"])
 
         body = json.loads(event.get("body", "{}"))
 

@@ -51,13 +51,13 @@ class FavoriteRepository(FavoriteRepositoryInterface):
         with get_db_session() as db:
             return db.query(Favorite).filter(Favorite.id == favorite_id).first()
 
-    def delete(self, request_id: UUID) -> bool:
-        """Delete a Favorite.
+    def delete(self, favorite_id: UUID) -> bool:
+        """Delete a Favorite by its ID.
 
         Returns Boolean whether a row was deleted or not (idempotent).
         """
         with get_db_session() as db:
-            favorite = db.query(Favorite).filter(Favorite.id == request_id).first()
+            favorite = db.query(Favorite).filter(Favorite.id == favorite_id).first()
             if not favorite:  # Already removed
                 return True
             db.delete(favorite)

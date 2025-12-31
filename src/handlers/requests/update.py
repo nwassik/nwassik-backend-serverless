@@ -11,8 +11,9 @@ from src.schemas.request import RequestUpdate
 def update_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
-        claims = event.get("requestContext").get("authorizer").get("claims")
-        user_id = UUID(claims.get("sub"))
+        # HTTP API JWT authorizer structure: requestContext.authorizer.jwt.claims
+        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+        user_id = UUID(claims["sub"])
         request_id = UUID(event.get("pathParameters", {}).get("request_id"))
 
         request = request_repo.get_by_id(request_id=request_id)
@@ -35,7 +36,7 @@ def update_request(event, _):  # noqa
         return success(
             data={
                 "message": "Request updated successfully",
-                "request_id": request_id,
+                "request_id": str(request_id),
             },
         )
 

@@ -10,8 +10,9 @@ def delete_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
         request_id = UUID(event.get("pathParameters", {}).get("request_id"))
-        claims = event.get("requestContext").get("authorizer").get("claims")
-        user_id = UUID(claims.get("sub"))
+        # HTTP API JWT authorizer structure: requestContext.authorizer.jwt.claims
+        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+        user_id = UUID(claims["sub"])
 
         request = request_repo.get_by_id(request_id)
 

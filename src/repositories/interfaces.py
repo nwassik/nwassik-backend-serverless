@@ -49,16 +49,16 @@ class FavoriteRepositoryInterface(ABC):
     """Interface for managing user favorites."""
 
     @abstractmethod
-    def add(self, user_id: UUID, request_id: UUID) -> Favorite:
-        """Add a new favorite for a user."""
+    def create(self, user_id: UUID, request_id: UUID) -> Favorite:
+        """Create a new favorite for a user (idempotent)."""
 
     @abstractmethod
-    def delete(self, user_id: UUID, request_id: UUID) -> bool:
-        """Remove a favorite by user and request."""
+    def get_by_id(self, favorite_id: UUID) -> Favorite | None:
+        """Get a favorite by its ID."""
 
     @abstractmethod
-    def is_favorite(self, user_id: UUID, request_id: UUID) -> bool:
-        """Check if a given request is favorited by a specific user."""
+    def delete(self, favorite_id: UUID) -> bool:
+        """Delete a favorite by its ID."""
 
     @abstractmethod
     def list_user_favorites(self, user_id: UUID) -> list[Favorite]:

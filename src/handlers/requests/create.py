@@ -12,8 +12,9 @@ from src.schemas.request import RequestCreate
 def create_request(event, _):  # noqa
     request_repo = get_request_repository()
     try:
-        claims = event.get("requestContext").get("authorizer").get("claims")
-        user_id = UUID(claims.get("sub"))
+        # HTTP API JWT authorizer structure: requestContext.authorizer.jwt.claims
+        claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+        user_id = UUID(claims["sub"])
 
         # NOTE: Fail early
         if len(request_repo.get_user_requests(user_id=user_id)) >= MAX_USER_CREATED_REQUESTS:
@@ -29,7 +30,7 @@ def create_request(event, _):  # noqa
         input_request: RequestCreate = RequestCreate.model_validate(body)
 
         request = request_repo.create(
-            user_id=UUID(user_id),
+            user_id=user_id,  # already UUID from line 17
             input_request=input_request,
         )
 
