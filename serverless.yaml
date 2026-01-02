@@ -1,50 +1,31 @@
-# serverless.yml
-# Testing deployment speed with Lambda Layers
-
 service: nwassik
 
 frameworkVersion: "4"
 
 package:
   patterns: # import the bare minimum (minimalistic)
-    - "src/"
-    - "README.md"
+    - "!**"
+    - "src/**/*.py"
     - "requirements.txt"
     - "serverless.yaml"
-    - "!.gitignore"
-    - "!venv/**" # ← Explicitly exclude venv
-    - "!node_modules/**" # ← Explicitly exclude node_modules
-    - "!__pycache__/**" # ← Explicitly exclude pycache
+
 custom:
-  # IMPORTANT: Always deploy with --stage flag (dev, staging, or prod)
-  # Default stage 'NotToUseStage' will fail to force explicit stage selection
-  allowedStages:
-    - dev
-    - staging
-    - prod
+  cognitoUserPoolId: ${env:COGNITO_USER_POOL_ID}
+  cognitoAppClientId: ${env:COGNITO_APP_CLIENT_ID}
 
   stages:
     dev:
       baseDomain: https://api-dev.nwassik.com
-      cognitoUserPoolId: ${env:COGNITO_USER_POOL_ID}
-      cognitoAppClientId: ${env:COGNITO_APP_CLIENT_ID}
     staging:
       baseDomain: https://api-staging.nwassik.com
-      cognitoUserPoolId: ${env:COGNITO_USER_POOL_ID}
-      cognitoAppClientId: ${env:COGNITO_APP_CLIENT_ID}
     prod:
       baseDomain: https://api.nwassik.com
-      cognitoUserPoolId: ${env:COGNITO_USER_POOL_ID}
-      cognitoAppClientId: ${env:COGNITO_APP_CLIENT_ID}
 
-  # NOTE: By default, Serverless now know how to bundle Python packages
-  #       so no need to install python plugin
-  # NOTE: exact keyword needed by "serverless-python-requirements" plugin already installed
   pythonRequirements:
     usePoetry: false
-    dockerizePip: true # <<--- build wheels in Docker (required for compiled deps as I am on MacOS)
-    useStaticCache: true # ← Enable cache to prevent unnecessary layer rebuilds
-    layer: true # ← Package dependencies as a Lambda Layer (shared across all functions)
+    dockerizePip: true # build wheels in Docker (required for compiled deps as I am on MacOS/darwin)
+    useStaticCache: true # Enable cache to prevent unnecessary layer rebuilds
+    layer: true # Package dependencies as a Lambda Layer (shared across all functions)
 
     # Fail if no wheel! do not compile
     dockerBuildCmd: |
@@ -60,34 +41,31 @@ custom:
 provider:
   name: aws
   runtime: python3.11
-  region: eu-west-3
-  stage: NotToUseStage # NOTE: this is kept as a safeguard to force explicit stage selection as serverless framework defaults to dev...
-  memorySize: 256 # MB (currently using ~157MB, reduced from default 1024MB)
+  region: ${env:AWS_REGION}
+  stage: ${env:STAGE}
+  memorySize: 256 # MB (currently using ~157MB, reduced from default , becareful as it impacts CPU)
   layers:
-    - Ref: PythonRequirementsLambdaLayer # Reference the layer created by pythonRequirements.layer:true
+    - Ref: PythonRequirementsLambdaLayer
   environment:
-    RUN_ENV: cloud # Running in AWS Lambda (cloud) vs local
-    STAGE: ${sls:stage} # used in Python code to detect Lambda stage
-    BASE_DOMAIN: ${self:custom.stages.${sls:stage}.baseDomain, 'https://api-${sls:stage}.nwassik.com'} # Stage-specific API domain
-    DATABASE_SECRET_NAME: "nwassik/${sls:stage}/app-db-secret" # Secrets Manager secret for application
-    MAX_USER_CREATED_REQUESTS: 20
-    MAX_USER_CREATED_FAVORITES: 100
+    RUN_ENV: cloud # Running in cloud (i.e AWS Lambda) vs local
+    STAGE: ${sls:stage}
+    BASE_DOMAIN: ${self:custom.stages.${sls:stage}.baseDomain}
+    DATABASE_SECRET_NAME: "nwassik/${sls:stage}/app-db-secret"
+    MAX_USER_CREATED_REQUESTS: ${env:MAX_USER_CREATED_REQUESTS}
+    MAX_USER_CREATED_FAVORITES: ${env:MAX_USER_CREATED_FAVORITES}
   iam:
-    # Use the IAM role created by Terraform (nwassik-infra/iam.tf)
-    # This role includes permissions for Secrets Manager and DSQL access
     role: arn:aws:iam::${aws:accountId}:role/nwassik-${sls:stage}-lambda-app-role
 
-  # NOTE: Using HTTP API (not REST API) because it's:
-  #   ✅ 70% cheaper ($1/M vs $3.50/M requests)
-  #   ✅ 60% faster (lower latency)
-  #   ✅ Native and simple JWT authentication support
-  #   ✅ Built-in CORS support
-  #   ✅ Supports OpenAPI documentation
-  #   ❌ Does NOT support request validation at gateway level
-  #      (REST API can validate before Lambda runs; HTTP API cannot)
-  #      Validation must be done in Lambda code
-  #   ❌ Global throttling only (not per-user)
-  #      Per-user rate limiting will be implemented in Lambda with Redis/DynamoDB later
+  # NOTE: Using AWS API Gateway HTTP API (not REST API)
+  #   Pros:
+  #      - 70% cheaper ($1/M vs $3.50/M requests)
+  #      - 60% faster (lower latency)
+  #      - Native and simple JWT authentication support
+  #      - Built-in CORS support
+  #      - Supports OpenAPI documentation
+  #   Cons:
+  #      - Does NOT support request validation at gateway level (REST API can validate before Lambda runs; HTTP API cannot) i.e Validation must be done in Lambda code
+  #      - Global throttling only (not per-user): uer-user rate limiting will be implemented in Lambda with Redis/DynamoDB later
   httpApi:
     name: nwassik-${sls:stage}
     # TODO: Add CORS configuration when connecting frontend
@@ -95,9 +73,9 @@ provider:
       cognitoAuthorizer:
         type: jwt
         identitySource: $request.header.Authorization
-        issuerUrl: https://cognito-idp.${aws:region}.amazonaws.com/${self:custom.stages.${sls:stage}.cognitoUserPoolId}
+        issuerUrl: https://cognito-idp.${aws:region}.amazonaws.com/${self:custom.cognitoUserPoolId}
         audience:
-          - ${self:custom.stages.${sls:stage}.cognitoAppClientId}
+          - ${self:custom.cognitoAppClientId}
 
 functions:
   # -----------------------------------------------------------------------------
