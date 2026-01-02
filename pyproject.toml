@@ -19,3 +19,14 @@ ignore = [
 
 [tool.ruff.isort]
 known-first-party = ["your_project"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests (no external dependencies)",
+    "integration: Integration tests (uses local DB)",
+    "e2e: End-to-end tests (requires deployed API)",
+]
+asyncio_mode = "auto"
