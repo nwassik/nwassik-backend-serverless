@@ -17,7 +17,7 @@ def list_user_favorites(event, _):  # noqa
         favorites = favorite_repo.list_user_favorites(user_id=user_id)
         return success(
             {
-                "requests": [fav.to_dict() for fav in favorites],
+                "favorites": [fav.to_dict() for fav in favorites],
                 "user_id": str(user_id),
                 "total": len(favorites),
             }
